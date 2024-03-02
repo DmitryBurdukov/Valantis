@@ -67,7 +67,6 @@ function App() {
 	}
 
 	const onFilterRequest = useCallback((filter, filterValue = '') => {
-		console.log("FILTER REQUEST")
         if (filter && filterValue) {
             service.filter(filter, filterValue)
 					.then(data => {
