@@ -6,33 +6,36 @@ import Spinner from "../spinner/Spinner";
 
 import "./goods.scss";
 
-function Goods(props) {
-    const {renderIds} = props;
+function Goods({ isErrorFromProps, renderIds, activeFilter, filteredValue, loadingData, foolFilteredData}) {
     const [goods, setGoods] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isError, setError] = useState(props.isError);
-
+    const [isError, setError] = useState(isErrorFromProps);
+    console.log('GOODS              RENDER');
+    console.log(renderIds)
     const service = new Service();
-
-    const getGoods = (idsArray) => {
+    const getGoods = (idsArray) => { // ЗАГРУЖАЕТ ДАННЫЕ ПО ЗАПРОСУ
+        setLoading(true)
         service.get_items(idsArray)
-            .then(data => onGoodsLoaded(data.result))
+            .then(data => {onGoodsLoaded(data.result)}) // СТРОИТ МАССИВ ДЛЯ РЕНДЕРИНГА И УБИРАЕТ ПОВТОРЯЮЩИЕСЯ ЭЛЕМЕНТЫ
             .catch((e) => {
                 console.log('ERROR IN GOODS', e)
                 // onError(true);
-                // setLoading(false)
+                setLoading(({loading}) => false)
+
                 getGoods(idsArray)
             });
     }
 
+
+
     const onError = (value) => {
-        setError(value)
+        // setError(value)
     }
 
     const onGoodsLoaded = (data) => {
         console.log(data)
         let checkItemsArray = [];
-        const godsItems = data.map(item => {
+        const goodsItems = data.map(item => {
             if (checkItemsArray.indexOf(item['id']) === -1) {
                 checkItemsArray.push(item.id)
                 return (
@@ -40,31 +43,32 @@ function Goods(props) {
                 )
             }
         })
-        setGoods(godsItems);
-        setLoading(false);
+        setGoods(goodsItems);
+        setLoading(() => false);
+
     }
+
+    // useEffect(() => {
+        
+    // }, [loading])
 
     useEffect(() => {
         if (renderIds.length > 0) {
             getGoods(renderIds);
         }
-    }, [renderIds]);
-
-    const spinner = loading ? <Spinner/> : null;
+    }, [renderIds, activeFilter, filteredValue]);
+    const spinner = loading || loadingData ? <Spinner/> : null;
     const error = isError ? 'Что-то пошло не так' : null;
+    // const 
+    const goodsArray = renderIds.length === 0 ? [] : (goods && !loading && !error) ? goods : null;
     return (
         <>
             <h1 className="title mt-4 mb-4">Перечень товаров</h1>
-
+            {/* <h2>{activeFilter}</h2> */}
+            {/* <h2>{filteredValue}</h2> */}
             <div className="d-flex p-2 flex-row justify-content-center container goods">
-                {/* <div className="p-2 d-flex flex-column p-2 goods__item border border-primary">
-                    <div className="p-1 goods__id">ID товара: <span>id</span></div>
-                    <div className="p-1 goods__brand">Название бренда: <span>brand</span></div>
-            <div className="p-1 goods__price">Цена: <span>price</span></div>
-            <div className="p-1 goods__product">Название: <span>product</span></div>
-                </div> */}
                 {spinner}
-                {goods}
+                {goodsArray}
                 {error}
             </div>
         </>
